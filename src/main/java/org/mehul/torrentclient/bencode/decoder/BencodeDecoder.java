@@ -4,8 +4,10 @@ import org.mehul.torrentclient.bencode.exception.BencodeException;
 import org.mehul.torrentclient.bencode.model.*;
 import org.mehul.torrentclient.util.ByteIterator;
 
-import java.nio.charset.StandardCharsets;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 public class BencodeDecoder {
 
@@ -150,14 +152,6 @@ public class BencodeDecoder {
 
             Bencode value = decodeNext(it);
             map.put(key, value);
-        }
-
-        // Check for key ordering
-        List<String> sorted = new ArrayList<>(keys);
-        sorted.sort(Comparator.comparing(k -> k.getBytes(StandardCharsets.UTF_8), Arrays::compare));
-
-        if (!keys.equals(sorted)) {
-            throw new BencodeException("Dictionary keys not in lexicographic byte order at position " + it.getIndex());
         }
 
         return new BencodeDictionary(map);

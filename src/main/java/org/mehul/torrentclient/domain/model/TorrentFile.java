@@ -9,10 +9,11 @@ import org.mehul.torrentclient.bencode.model.Bencode;
 import org.mehul.torrentclient.bencode.model.BencodeDictionary;
 import org.mehul.torrentclient.bencode.model.BencodeString;
 import org.mehul.torrentclient.util.ByteUtil;
+import org.mehul.torrentclient.util.HttpUtil;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.Map;
+import java.util.*;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -84,6 +85,30 @@ public class TorrentFile {
     }
 
     public String getInfoHashAsString() {
-        return ByteUtil.bytesToString(infoHash);
+        return ByteUtil.bytesToHexString(infoHash);
+    }
+
+    public TrackerResponse getTrackers() {
+        HttpUtil httpUtil = new HttpUtil();
+        List<TrackerResponse> res = new ArrayList<>();
+
+
+        Map<String, String> params = new HashMap<>();
+
+        Random random = new Random();
+        byte[] peerIdBytes = new byte[20];
+        random.nextBytes(peerIdBytes);
+
+        params.put("info_hash", ByteUtil.bytesToString(infoHash));
+        params.put("peer_id", ByteUtil.bytesToString(peerIdBytes));
+        params.put("port", "6881");
+        params.put("uploaded", "0");
+        params.put("downloaded", "0");
+        params.put("left", Integer.toString(torrentInfo.getPieceLength()));
+        params.put("compact", "1");
+        String uri = announce;
+
+        Bencode responseBencode = httpUtil.getRequest(uri, params);
+        return TrackerResponse.fromBencode(responseBencode);
     }
 }
