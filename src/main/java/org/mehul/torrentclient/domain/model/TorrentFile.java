@@ -1,15 +1,19 @@
 package org.mehul.torrentclient.domain.model;
 
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
+import lombok.ToString;
+import org.mehul.torrentclient.bencode.encoder.BencodeEncoder;
 import org.mehul.torrentclient.bencode.exception.BencodeException;
 import org.mehul.torrentclient.bencode.model.Bencode;
 import org.mehul.torrentclient.bencode.model.BencodeDictionary;
 import org.mehul.torrentclient.bencode.model.BencodeString;
+import org.mehul.torrentclient.util.ByteUtil;
 
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.Map;
 
-@Getter
-@Setter
 @AllArgsConstructor
 @NoArgsConstructor
 @ToString
@@ -19,6 +23,7 @@ public class TorrentFile {
 
     private String announce;
     private TorrentInfo torrentInfo;
+    private byte[] infoHash;
 
     public static TorrentFile fromBencode(Bencode bencode) throws BencodeException {
         if (bencode.getType() != Bencode.BencodeType.DICTIONARY) {
@@ -54,5 +59,31 @@ public class TorrentFile {
 
         Bencode infoBencode = dict.get(INFO_KEY);
         this.torrentInfo = (SingleFileTorrentInfo.fromBencode(infoBencode));
+
+        try {
+            MessageDigest md = MessageDigest.getInstance("SHA-1");
+            BencodeEncoder bencodeEncoder = new BencodeEncoder();
+            this.infoHash = md.digest(bencodeEncoder.encode(infoBencode));
+        } catch (NoSuchAlgorithmException ex) {
+            throw new BencodeException("SHA-1 algorithm not available: " + ex.getMessage());
+        } catch (RuntimeException ex) {
+            throw new BencodeException("Error while calculating info hash: " + ex.getMessage());
+        }
+    }
+
+    public String getAnnounce() {
+        return announce;
+    }
+
+    public TorrentInfo getTorrentInfo() {
+        return torrentInfo;
+    }
+
+    public byte[] getInfoHash() {
+        return infoHash;
+    }
+
+    public String getInfoHashAsString() {
+        return ByteUtil.bytesToString(infoHash);
     }
 }

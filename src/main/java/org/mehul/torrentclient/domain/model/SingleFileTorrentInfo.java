@@ -1,16 +1,17 @@
 package org.mehul.torrentclient.domain.model;
 
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
+import lombok.ToString;
 import org.mehul.torrentclient.bencode.exception.BencodeException;
 import org.mehul.torrentclient.bencode.model.Bencode;
 import org.mehul.torrentclient.bencode.model.BencodeDictionary;
 import org.mehul.torrentclient.bencode.model.BencodeNumber;
 import org.mehul.torrentclient.bencode.model.BencodeString;
+import org.mehul.torrentclient.util.ByteUtil;
 
 import java.util.Map;
 
-@Getter
-@Setter
 @AllArgsConstructor
 @NoArgsConstructor
 @ToString
@@ -19,6 +20,7 @@ public class SingleFileTorrentInfo extends TorrentInfo {
     private static final String LENGTH_KEY = "length";
     private static final String PIECE_LENGTH_KEY = "piece length";
     private static final String PIECES_KEY = "pieces";
+    private static final int PIECE_HASH_LENGTH = 20;
 
     private int length;
 
@@ -85,12 +87,16 @@ public class SingleFileTorrentInfo extends TorrentInfo {
             throw new BencodeException("No " + PIECES_KEY + " key in TorrentInfo dictionary");
         }
 
-        Bencode lengthBencode = dict.get(PIECES_KEY);
-        if (lengthBencode.getType() != Bencode.BencodeType.STRING) {
+        Bencode piecesBencode = dict.get(PIECES_KEY);
+        if (piecesBencode.getType() != Bencode.BencodeType.STRING) {
             throw new BencodeException("Pieces in TorrentInfo dictionary should be of type String");
         }
 
-        this.rawPieces = ((BencodeString) lengthBencode).asString();
+        byte[] concatenatedPieces = ((BencodeString) piecesBencode).getValue();
+        this.pieceHashes = ByteUtil.splitBytesByLength(concatenatedPieces, PIECE_HASH_LENGTH);
     }
 
+    public int getLength() {
+        return length;
+    }
 }
