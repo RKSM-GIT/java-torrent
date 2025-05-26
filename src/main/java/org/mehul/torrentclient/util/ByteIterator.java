@@ -1,4 +1,4 @@
-package org.mehul.torrentclient.bencode.util;
+package org.mehul.torrentclient.util;
 
 import org.mehul.torrentclient.bencode.exception.BencodeException;
 

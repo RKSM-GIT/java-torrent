@@ -2,7 +2,7 @@ package org.mehul.torrentclient.bencode.decoder;
 
 import org.mehul.torrentclient.bencode.exception.BencodeException;
 import org.mehul.torrentclient.bencode.model.*;
-import org.mehul.torrentclient.bencode.util.ByteIterator;
+import org.mehul.torrentclient.util.ByteIterator;
 
 import java.nio.charset.StandardCharsets;
 import java.util.*;
