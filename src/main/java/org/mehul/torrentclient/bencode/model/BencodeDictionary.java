@@ -1,6 +1,7 @@
 package org.mehul.torrentclient.bencode.model;
 
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class BencodeDictionary implements Bencode {
 
@@ -18,5 +19,12 @@ public class BencodeDictionary implements Bencode {
     @Override
     public Map<String, Bencode> getValue() {
         return value;
+    }
+
+    @Override
+    public String toString() {
+        return value.entrySet().stream()
+                .map(e -> "\"" + e.getKey().replace("\"", "\\\"") + "\": " + e.getValue())
+                .collect(Collectors.joining(", ", "{", "}"));
     }
 }

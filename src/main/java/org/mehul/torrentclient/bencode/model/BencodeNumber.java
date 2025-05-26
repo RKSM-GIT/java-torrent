@@ -17,4 +17,9 @@ public class BencodeNumber implements Bencode {
     public Long getValue() {
         return value;
     }
+
+    @Override
+    public String toString() {
+        return Long.toString(value);
+    }
 }

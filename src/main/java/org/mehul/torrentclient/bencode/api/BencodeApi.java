@@ -1,7 +1,8 @@
 package org.mehul.torrentclient.bencode.api;
 
-import com.mehul.torrentclient.bencode.decoder.BencodeDecoder;
-import com.mehul.torrentclient.bencode.encoder.BencodeEncoder;
+import org.mehul.torrentclient.bencode.decoder.BencodeDecoder;
+import org.mehul.torrentclient.bencode.encoder.BencodeEncoder;
+import org.mehul.torrentclient.bencode.model.Bencode;
 
 import java.io.File;
 import java.io.IOException;
@@ -18,15 +19,15 @@ public class BencodeApi {
         this.encoder = new BencodeEncoder();
     }
 
-    public Object decode(byte[] bytes) {
+    public Bencode decode(byte[] bytes) {
         return decoder.decode(bytes);
     }
 
-    public byte[] encode(Object obj) {
-        return encoder.encode(obj);
+    public byte[] encode(Bencode bencode) {
+        return encoder.encode(bencode);
     }
 
-    public Object decodeFile(String path) throws IOException {
+    public Bencode decodeFile(String path) throws IOException {
         File file = new File(path);
         if (!file.exists()) {
             throw new IOException("Unable to find file: " + path);
@@ -36,8 +37,8 @@ public class BencodeApi {
         return decode(bytes);
     }
 
-    public void encodeToFile(Object obj, String path) throws IOException {
-        byte[] encoded = encode(obj);
+    public void encodeToFile(Bencode bencode, String path) throws IOException {
+        byte[] encoded = encode(bencode);
         Path filePath = Paths.get(path);
         Files.write(filePath, encoded);
     }

@@ -1,13 +1,15 @@
-package org.mehul.torrentclient.bencode.decoder.bencode.util;
+package org.mehul.torrentclient.bencode.util;
+
+import org.mehul.torrentclient.bencode.exception.BencodeException;
 
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
-public class ByteStreamReader implements Iterator<Byte> {
+public class ByteIterator implements Iterator<Byte> {
     private final byte[] bytes;
     private int index;
 
-    public ByteStreamReader(byte[] bytes) {
+    public ByteIterator(byte[] bytes) {
         if (bytes == null) {
             throw new IllegalArgumentException("bytes array cannot be null");
         }
@@ -23,19 +25,19 @@ public class ByteStreamReader implements Iterator<Byte> {
     @Override
     public Byte next() {
         if (!hasNext()) {
-            throw new NoSuchElementException("End of byte stream reached");
+            throw new BencodeException("Unexpected end of input at position " + index);
         }
         return bytes[index++];
     }
 
-    public Byte current() {
+    public Byte peek() {
         if (!hasNext()) {
-            throw new NoSuchElementException("End of byte stream reached");
+            throw new NoSuchElementException("Unexpected end of input at position " + index);
         }
         return bytes[index];
     }
 
-    public void reset() {
-        index = 0;
+    public int getIndex() {
+        return index;
     }
 }

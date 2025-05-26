@@ -1,137 +1,165 @@
 package org.mehul.torrentclient.bencode.decoder;
 
-import com.mehul.torrentclient.bencode.model.BencodeType;
-import com.mehul.torrentclient.bencode.util.ByteStreamReader;
+import org.mehul.torrentclient.bencode.exception.BencodeException;
+import org.mehul.torrentclient.bencode.model.*;
+import org.mehul.torrentclient.bencode.util.ByteIterator;
 
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
-public class BencodeDecoder implements DecoderStrategy {
-    private static final byte DICTIONARY_START = (byte) 'd';
-    private static final byte LIST_START = (byte) 'l';
-    private static final byte NUMBER_START = (byte) 'i';
-    private static final byte END_MARKER = (byte) 'e';
-    private static final byte BYTE_ARRAY_DIVIDER = (byte) ':';
+public class BencodeDecoder {
 
-    @Override
-    public Object decode(byte[] bytes) {
-        ByteStreamReader reader = new ByteStreamReader(bytes);
-        return decodeNextObject(reader);
-    }
+    public Bencode decode(byte[] bytes) {
+        ByteIterator it = new ByteIterator(bytes);
+        Bencode result = decodeNext(it);
 
-    public Object decodeNextObject(ByteStreamReader reader) {
-        if (!reader.hasNext()) {
-            return null;
+        if (it.hasNext()) {
+            throw new BencodeException("Trailing data after valid bencode at position " + it.getIndex());
         }
 
-        BencodeType type = BencodeType.fromByte(reader.current());
+        return result;
+    }
+
+    private Bencode decodeNext(ByteIterator it) {
+        byte b = it.peek();
+
+        return switch (b) {
+            case 'i' -> decodeNumber(it);
+            case 'l' -> decodeList(it);
+            case 'd' -> decodeDictionary(it);
+            default -> {
+                if (b >= '0' && b <= '9') {
+                    yield decodeString(it);
+                }
+                throw new BencodeException("Unexpected byte '" + (char) b + "' at position " + it.getIndex());
+            }
+        };
+    }
+
+    private BencodeNumber decodeNumber(ByteIterator it) {
+        int start = it.getIndex();
+        it.next(); // skip 'i'
+
+        StringBuilder sb = new StringBuilder();
+
+        if (it.peek() == '-') {
+            byte b = it.next();
+            sb.append((char) b);
+        }
+
+        boolean leadingZero = it.peek() == '0';
+        while (true) {
+            byte b = it.next();
+            if (b == 'e') {
+                break;
+            }
+
+            if (!Character.isDigit(b)) {
+                throw new BencodeException("Invalid digit in integer at position " + it.getIndex());
+            }
+
+            sb.append((char) b);
+        }
+
+        if (sb.toString().equals("-0") || (leadingZero && sb.length() > 1)) {
+            throw new BencodeException("Invalid integer format at position " + start);
+        }
 
         try {
-            return switch (type) {
-                case DICTIONARY -> decodeNextDictionary(reader);
-                case LIST -> decodeNextList(reader);
-                case NUMBER -> decodeNextNumber(reader);
-                case BYTE_ARRAY -> decodeNextString(reader);
-                default -> throw new IllegalStateException("Unknown bencode type");
-            };
-        } catch (RuntimeException ex) {
-            throw new IllegalArgumentException("Invalid bencode provided: " + ex.getMessage());
+            return new BencodeNumber(Long.parseLong(sb.toString()));
+        } catch (NumberFormatException ex) {
+            throw new BencodeException("Malformed number at position " + start, ex);
         }
     }
 
-    public Long decodeNextNumber(ByteStreamReader reader) {
-        if (!reader.hasNext() || reader.current() != NUMBER_START) {
-            throw new IllegalArgumentException("Dictionary should start with " + (char) NUMBER_START);
-        }
-        reader.next();
+    private BencodeString decodeString(ByteIterator it) {
+        int start = it.getIndex();
+        StringBuilder lengthStr = new StringBuilder();
 
-        return decodeNumberWithoutStartMarker(reader);
+        while (true) {
+            byte b = it.next();
+            if (b == ':') break;
+            if (!Character.isDigit(b)) {
+                throw new BencodeException("Invalid string length at position " + it.getIndex());
+            }
+            lengthStr.append((char) b);
+        }
+
+        int length;
+        try {
+            length = Integer.parseInt(lengthStr.toString());
+        } catch (NumberFormatException ex) {
+            throw new BencodeException("Invalid string length at position " + start, ex);
+        }
+
+        if (length < 0) {
+            throw new BencodeException("Negative string length at position " + start);
+        }
+
+        byte[] strBytes = new byte[length];
+        for (int i = 0; i < length; i++) {
+            if (!it.hasNext()) {
+                throw new BencodeException("Unexpected end of input in string value at position " + it.getIndex());
+            }
+            byte x = it.peek();
+            char c = (char) x;
+            strBytes[i] = it.next();
+        }
+
+        return new BencodeString(strBytes);
     }
 
-    private Long decodeNumberWithoutStartMarker(ByteStreamReader reader) {
-        List<Byte> bytes = new ArrayList<>();
+    private BencodeList decodeList(ByteIterator it) {
+        it.next(); // skip 'l'
+        List<Bencode> items = new ArrayList<>();
 
-        // Keep reading bytes until we hit the end marker
-        while (reader.hasNext()) {
-            if (reader.current() == END_MARKER || reader.current() == BYTE_ARRAY_DIVIDER) {
-                reader.next();
+        while (true) {
+            if (!it.hasNext()) {
+                throw new BencodeException("Unexpected end of list at position " + it.getIndex());
+            }
+
+            if (it.peek() == 'e') {
+                it.next(); // skip 'e'
                 break;
             }
 
-            bytes.add(reader.next());
+            items.add(decodeNext(it));
         }
 
-        if (bytes.isEmpty()) {
-            return 0L;
-        }
-
-        // Convert bytes to string and parse
-        byte[] numberBytes = new byte[bytes.size()];
-        for (int i = 0; i < bytes.size(); i++) {
-            numberBytes[i] = bytes.get(i);
-        }
-
-        String numberString = new String(numberBytes, StandardCharsets.UTF_8);
-        return Long.parseLong(numberString);
+        return new BencodeList(items);
     }
 
-    public String decodeNextString(ByteStreamReader reader) {
-        long strLen = decodeNumberWithoutStartMarker(reader);
+    private BencodeDictionary decodeDictionary(ByteIterator it) {
+        it.next(); // skip 'd'
+        Map<String, Bencode> map = new LinkedHashMap<>();
+        List<String> keys = new ArrayList<>();
 
-        // Read actual byte array
-        byte[] result = new byte[(int) strLen];
-        for (int i = 0; i < strLen; i++) {
-            result[i] = reader.next();
-        }
+        while (true) {
+            if (!it.hasNext()) {
+                throw new BencodeException("Unexpected end of dictionary at position " + it.getIndex());
+            }
 
-        return new String(result, StandardCharsets.UTF_8);
-    }
-
-    public List<Object> decodeNextList(ByteStreamReader reader) {
-        if (!reader.hasNext() || reader.current() != LIST_START) {
-            throw new IllegalArgumentException("Dictionary should start with " + (char) LIST_START);
-        }
-        reader.next();
-
-        List<Object> list = new ArrayList<>();
-
-        // Keep decoding until we hit the end marker
-        while (reader.hasNext()) {
-            if (reader.current() == END_MARKER) {
-                reader.next();
+            if (it.peek() == 'e') {
+                it.next(); // skip 'e'
                 break;
             }
 
-            list.add(decodeNextObject(reader));
+            BencodeString keyObj = decodeString(it);
+            String key = keyObj.asString();
+            keys.add(key);
+
+            Bencode value = decodeNext(it);
+            map.put(key, value);
         }
 
-        return list;
-    }
+        // Check for key ordering
+        List<String> sorted = new ArrayList<>(keys);
+        sorted.sort(Comparator.comparing(k -> k.getBytes(StandardCharsets.UTF_8), Arrays::compare));
 
-    public Map<String, Object> decodeNextDictionary(ByteStreamReader reader) {
-        if (!reader.hasNext() || reader.current() != DICTIONARY_START) {
-            throw new IllegalArgumentException("Dictionary should start with " + (char) DICTIONARY_START);
-        }
-        reader.next();
-
-        Map<String, Object> dict = new HashMap<>();
-
-        // Keep decoding until we hit the end marker
-        while (reader.hasNext()) {
-            if (reader.current() == END_MARKER) {
-                reader.next();
-                break;
-            }
-
-            String key = decodeNextString(reader);
-            Object value = decodeNextObject(reader);
-
-            dict.put(key, value);
+        if (!keys.equals(sorted)) {
+            throw new BencodeException("Dictionary keys not in lexicographic byte order at position " + it.getIndex());
         }
 
-        return dict;
+        return new BencodeDictionary(map);
     }
 }

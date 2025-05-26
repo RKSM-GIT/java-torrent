@@ -1,6 +1,7 @@
 package org.mehul.torrentclient.bencode.model;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class BencodeList implements Bencode {
 
@@ -18,5 +19,12 @@ public class BencodeList implements Bencode {
     @Override
     public List<Bencode> getValue() {
         return value;
+    }
+
+    @Override
+    public String toString() {
+        return value.stream()
+                .map(Object::toString)
+                .collect(Collectors.joining(", ", "[", "]"));
     }
 }
