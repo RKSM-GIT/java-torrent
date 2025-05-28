@@ -1,6 +1,7 @@
 package org.mehul.torrentclient.domain.model;
 
 import lombok.AllArgsConstructor;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 import org.mehul.torrentclient.bencode.exception.BencodeException;
@@ -10,8 +11,10 @@ import org.mehul.torrentclient.bencode.model.BencodeNumber;
 import org.mehul.torrentclient.bencode.model.BencodeString;
 import org.mehul.torrentclient.util.ByteUtil;
 
+import java.util.List;
 import java.util.Map;
 
+@Getter
 @AllArgsConstructor
 @NoArgsConstructor
 @ToString
@@ -23,6 +26,7 @@ public class SingleFileTorrentInfo extends TorrentInfo {
     private static final int PIECE_HASH_LENGTH = 20;
 
     private int length;
+    private List<byte[]> pieceHashes;
 
     public static SingleFileTorrentInfo fromBencode(Bencode bencode) throws BencodeException {
         if (bencode.getType() != Bencode.BencodeType.DICTIONARY) {
@@ -96,7 +100,4 @@ public class SingleFileTorrentInfo extends TorrentInfo {
         this.pieceHashes = ByteUtil.splitBytesByLength(concatenatedPieces, PIECE_HASH_LENGTH);
     }
 
-    public int getLength() {
-        return length;
-    }
 }

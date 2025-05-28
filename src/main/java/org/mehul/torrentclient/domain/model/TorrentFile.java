@@ -1,6 +1,7 @@
 package org.mehul.torrentclient.domain.model;
 
 import lombok.AllArgsConstructor;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 import org.mehul.torrentclient.bencode.encoder.BencodeEncoder;
@@ -15,6 +16,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
 
+@Getter
 @AllArgsConstructor
 @NoArgsConstructor
 @ToString
@@ -72,25 +74,13 @@ public class TorrentFile {
         }
     }
 
-    public String getAnnounce() {
-        return announce;
-    }
-
-    public TorrentInfo getTorrentInfo() {
-        return torrentInfo;
-    }
-
-    public byte[] getInfoHash() {
-        return infoHash;
-    }
-
     public String getInfoHashAsString() {
         return ByteUtil.bytesToHexString(infoHash);
     }
 
-    public TrackerResponse getTrackers() {
+    public TrackerInfo getTrackers() {
         HttpUtil httpUtil = new HttpUtil();
-        List<TrackerResponse> res = new ArrayList<>();
+        List<TrackerInfo> res = new ArrayList<>();
 
 
         Map<String, String> params = new HashMap<>();
@@ -109,6 +99,6 @@ public class TorrentFile {
         String uri = announce;
 
         Bencode responseBencode = httpUtil.getRequest(uri, params);
-        return TrackerResponse.fromBencode(responseBencode);
+        return TrackerInfo.fromBencode(responseBencode);
     }
 }

@@ -9,7 +9,6 @@ import org.mehul.torrentclient.bencode.model.Bencode;
 import org.mehul.torrentclient.bencode.model.BencodeDictionary;
 import org.mehul.torrentclient.bencode.model.BencodeNumber;
 import org.mehul.torrentclient.bencode.model.BencodeString;
-import org.mehul.torrentclient.util.ByteUtil;
 
 import java.util.List;
 import java.util.Map;
@@ -18,26 +17,26 @@ import java.util.Map;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class TrackerResponse {
+public class TrackerInfo {
     private static final String INTERVAL_KEY = "interval";
     private static final String PEERS_KEY = "peers";
     private static final int PEERS_HASH_LENGTH = 6;
 
     private int interval;
-    private List<byte[]> peers;
+    private List<Peer> peers;
 
-    public static TrackerResponse fromBencode(Bencode bencode) {
+    public static TrackerInfo fromBencode(Bencode bencode) {
         if (bencode.getType() != Bencode.BencodeType.DICTIONARY) {
             throw new BencodeException("Only dictionary type bencode can be transformed into TrackerResponse");
         }
 
-        TrackerResponse trackerResponse = new TrackerResponse();
+        TrackerInfo trackerInfo = new TrackerInfo();
         Map<String, Bencode> dict = ((BencodeDictionary) bencode).getValue();
 
-        trackerResponse.setInterval(dict);
-        trackerResponse.setPeers(dict);
+        trackerInfo.setInterval(dict);
+        trackerInfo.setPeers(dict);
 
-        return trackerResponse;
+        return trackerInfo;
     }
 
     public void setInterval(Map<String, Bencode> dict) throws BencodeException {
@@ -65,14 +64,6 @@ public class TrackerResponse {
         }
 
         byte[] concatenatedPeers = ((BencodeString) peersBencode).getValue();
-        this.peers = ByteUtil.splitBytesByLength(concatenatedPeers, PEERS_HASH_LENGTH);
-    }
-
-    public List<byte[]> getPeers() {
-        return peers;
-    }
-
-    public int getInterval() {
-        return interval;
+        this.peers = Peer.peerListFromBytes(concatenatedPeers);
     }
 }

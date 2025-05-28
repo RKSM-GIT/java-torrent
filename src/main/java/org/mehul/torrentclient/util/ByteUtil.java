@@ -35,12 +35,4 @@ public class ByteUtil {
         System.arraycopy(source, sourceOffset, dest, 0, length);
         return dest;
     }
-
-    public static String bytesToIpAndPort(byte[] peersBytes) {
-        String ip = String.format("%d.%d.%d.%d", peersBytes[0] & 0xff, peersBytes[1] & 0xff,
-                peersBytes[2] & 0xff, peersBytes[3] & 0xff);
-        int port = ((peersBytes[4] & 0xff) << 8) | (peersBytes[5] & 0xff);
-
-        return ip + ":" + port;
-    }
 }
