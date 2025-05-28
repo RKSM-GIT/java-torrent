@@ -1,4 +1,4 @@
-package org.mehul.torrentclient.torrent;
+package org.mehul.torrentclient.tracker;
 
 import lombok.*;
 import org.mehul.torrentclient.bencode.exception.BencodeException;

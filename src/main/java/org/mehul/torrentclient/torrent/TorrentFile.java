@@ -9,6 +9,7 @@ import org.mehul.torrentclient.bencode.exception.BencodeException;
 import org.mehul.torrentclient.bencode.model.Bencode;
 import org.mehul.torrentclient.bencode.model.BencodeDictionary;
 import org.mehul.torrentclient.bencode.model.BencodeString;
+import org.mehul.torrentclient.tracker.TrackerInfo;
 import org.mehul.torrentclient.util.ByteUtil;
 import org.mehul.torrentclient.util.HttpUtil;
 import org.mehul.torrentclient.util.PeerUtil;
