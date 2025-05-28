@@ -1,4 +1,4 @@
-package org.mehul.torrentclient.domain.model;
+package org.mehul.torrentclient.torrent;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -11,10 +11,14 @@ import org.mehul.torrentclient.bencode.model.BencodeDictionary;
 import org.mehul.torrentclient.bencode.model.BencodeString;
 import org.mehul.torrentclient.util.ByteUtil;
 import org.mehul.torrentclient.util.HttpUtil;
+import org.mehul.torrentclient.util.PeerUtil;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @Getter
 @AllArgsConstructor
@@ -85,9 +89,7 @@ public class TorrentFile {
 
         Map<String, String> params = new HashMap<>();
 
-        Random random = new Random();
-        byte[] peerIdBytes = new byte[20];
-        random.nextBytes(peerIdBytes);
+        byte[] peerIdBytes = PeerUtil.generatePeerId();
 
         params.put("info_hash", ByteUtil.bytesToString(infoHash));
         params.put("peer_id", ByteUtil.bytesToString(peerIdBytes));

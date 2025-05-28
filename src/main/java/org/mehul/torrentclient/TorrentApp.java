@@ -3,9 +3,9 @@ package org.mehul.torrentclient;
 import org.mehul.torrentclient.bencode.api.BencodeApi;
 import org.mehul.torrentclient.bencode.exception.BencodeException;
 import org.mehul.torrentclient.bencode.model.Bencode;
-import org.mehul.torrentclient.domain.model.SingleFileTorrentInfo;
-import org.mehul.torrentclient.domain.model.TorrentFile;
-import org.mehul.torrentclient.domain.model.TrackerInfo;
+import org.mehul.torrentclient.torrent.SingleFileTorrentInfo;
+import org.mehul.torrentclient.torrent.TorrentFile;
+import org.mehul.torrentclient.torrent.TrackerInfo;
 import org.mehul.torrentclient.util.ByteUtil;
 
 import java.io.IOException;

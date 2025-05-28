@@ -1,4 +1,4 @@
-package org.mehul.torrentclient.domain.model;
+package org.mehul.torrentclient.torrent;
 
 import lombok.Getter;
 
