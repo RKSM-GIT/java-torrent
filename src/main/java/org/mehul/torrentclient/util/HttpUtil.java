@@ -15,9 +15,20 @@ import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.StringJoiner;
 
-// TODO: Make it a Singleton
 public class HttpUtil {
+
+    private HttpUtil() {
+    }
+
     private final HttpClient httpClient = HttpClient.newHttpClient();
+
+    private static final class SingletonInstanceHolder {
+        private static final HttpUtil SINGLETON_INSTANCE = new HttpUtil();
+    }
+
+    public static HttpUtil getInstance() {
+        return SingletonInstanceHolder.SINGLETON_INSTANCE;
+    }
 
     public Bencode getRequest(String uri, Map<String, String> params) throws BencodeException {
         URI fullUri = makeFullUrl(uri, params);

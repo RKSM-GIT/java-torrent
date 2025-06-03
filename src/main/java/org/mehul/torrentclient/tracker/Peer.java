@@ -13,7 +13,7 @@ import java.util.List;
 @NoArgsConstructor
 @ToString
 public class Peer {
-    private String ipv4Address;
+    private String hostIp;
     private int port;
 
     public static List<Peer> peerListFromBytes(byte[] peerBytes) throws BencodeException {

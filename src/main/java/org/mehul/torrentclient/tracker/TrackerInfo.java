@@ -25,7 +25,7 @@ public class TrackerInfo {
     private int interval;
     private List<Peer> peers;
 
-    public static TrackerInfo fromBencode(Bencode bencode) {
+    public static TrackerInfo fromBencode(Bencode bencode) throws BencodeException {
         if (bencode.getType() != Bencode.BencodeType.DICTIONARY) {
             throw new BencodeException("Only dictionary type bencode can be transformed into TrackerResponse");
         }

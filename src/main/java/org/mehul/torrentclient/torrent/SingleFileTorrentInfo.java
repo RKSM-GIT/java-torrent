@@ -40,7 +40,7 @@ public class SingleFileTorrentInfo extends TorrentInfo {
         singleFileTorrentInfo.setLength(dict);
         singleFileTorrentInfo.setPieceLength(dict);
         singleFileTorrentInfo.setPieces(dict);
-        singleFileTorrentInfo.torrentType = TorrentFileType.SINGLE;
+        singleFileTorrentInfo.torrentType = TorrentInfoType.SINGLE;
 
         return singleFileTorrentInfo;
     }

@@ -12,7 +12,6 @@ import org.mehul.torrentclient.bencode.model.BencodeString;
 import org.mehul.torrentclient.tracker.TrackerInfo;
 import org.mehul.torrentclient.util.ByteUtil;
 import org.mehul.torrentclient.util.HttpUtil;
-import org.mehul.torrentclient.util.PeerUtil;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -25,7 +24,8 @@ import java.util.Map;
 @AllArgsConstructor
 @NoArgsConstructor
 @ToString
-public class TorrentFile {
+// Torrent File
+public class MetaInfoFile {
     private static final String ANNOUNCE_KEY = "announce";
     private static final String INFO_KEY = "info";
 
@@ -33,18 +33,18 @@ public class TorrentFile {
     private TorrentInfo torrentInfo;
     private byte[] infoHash;
 
-    public static TorrentFile fromBencode(Bencode bencode) throws BencodeException {
+    public static MetaInfoFile fromBencode(Bencode bencode) throws BencodeException {
         if (bencode.getType() != Bencode.BencodeType.DICTIONARY) {
             throw new BencodeException("Only dictionary type bencode can be transformed into TorrentFile");
         }
 
-        TorrentFile torrentFile = new TorrentFile();
+        MetaInfoFile metaInfoFile = new MetaInfoFile();
         Map<String, Bencode> dict = ((BencodeDictionary) bencode).getValue();
 
-        torrentFile.setAnnounce(dict);
-        torrentFile.setInfo(dict);
+        metaInfoFile.setAnnounce(dict);
+        metaInfoFile.setInfo(dict);
 
-        return torrentFile;
+        return metaInfoFile;
     }
 
     public void setAnnounce(Map<String, Bencode> dict) throws BencodeException {
@@ -79,21 +79,15 @@ public class TorrentFile {
         }
     }
 
-    public String getInfoHashAsString() {
-        return ByteUtil.bytesToHexString(infoHash);
-    }
-
-    public TrackerInfo getTrackers() {
-        HttpUtil httpUtil = new HttpUtil();
+    public TrackerInfo getTrackers(byte[] peerId) throws BencodeException {
+        HttpUtil httpUtil = HttpUtil.getInstance();
         List<TrackerInfo> res = new ArrayList<>();
 
 
         Map<String, String> params = new HashMap<>();
 
-        byte[] peerIdBytes = PeerUtil.generatePeerId();
-
         params.put("info_hash", ByteUtil.bytesToString(infoHash));
-        params.put("peer_id", ByteUtil.bytesToString(peerIdBytes));
+        params.put("peer_id", ByteUtil.bytesToString(peerId));
         params.put("port", "6881");
         params.put("uploaded", "0");
         params.put("downloaded", "0");
