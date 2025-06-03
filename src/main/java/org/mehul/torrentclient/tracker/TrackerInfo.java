@@ -20,11 +20,13 @@ import java.util.Map;
 public class TrackerInfo {
     private static final String INTERVAL_KEY = "interval";
     private static final String PEERS_KEY = "peers";
-    private static final int PEERS_HASH_LENGTH = 6;
 
     private int interval;
     private List<Peer> peers;
 
+    // TODO: Also handle failure bencode
+    // If a tracker response has a 'key failure' reason,
+    // then that maps to a human readable string which explains why the query failed
     public static TrackerInfo fromBencode(Bencode bencode) throws BencodeException {
         if (bencode.getType() != Bencode.BencodeType.DICTIONARY) {
             throw new BencodeException("Only dictionary type bencode can be transformed into TrackerResponse");

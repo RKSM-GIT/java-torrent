@@ -13,18 +13,20 @@ import java.util.List;
 @NoArgsConstructor
 @ToString
 public class Peer {
+    private static final int PEERS_HASH_LENGTH = 6;
+
     private String hostIp;
     private int port;
 
     public static List<Peer> peerListFromBytes(byte[] peerBytes) throws BencodeException {
         int n = peerBytes.length;
-        if (n % 6 != 0) {
+        if (n % PEERS_HASH_LENGTH != 0) {
             throw new BencodeException("Each peer must be 6 bytes long");
         }
 
-        List<Peer> res = new ArrayList<>(n / 6);
+        List<Peer> res = new ArrayList<>(n / PEERS_HASH_LENGTH);
 
-        for (int i = 0; i < n; i += 6) {
+        for (int i = 0; i < n; i += PEERS_HASH_LENGTH) {
             byte[] currPeerBytes = ByteUtil.copyArray(peerBytes, i, 6);
             res.add(Peer.fromBytes(currPeerBytes));
         }
@@ -33,7 +35,7 @@ public class Peer {
     }
 
     public static Peer fromBytes(byte[] peerBytes) throws BencodeException {
-        if (peerBytes.length != 6) {
+        if (peerBytes.length != PEERS_HASH_LENGTH) {
             throw new BencodeException("Peer must be of 6 bytes");
         }
 
