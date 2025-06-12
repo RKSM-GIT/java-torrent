@@ -1,5 +1,6 @@
 package org.mehul.torrentclient.bencode.api;
 
+import lombok.extern.slf4j.Slf4j;
 import org.mehul.torrentclient.bencode.decoder.BencodeDecoder;
 import org.mehul.torrentclient.bencode.encoder.BencodeEncoder;
 import org.mehul.torrentclient.bencode.model.Bencode;
@@ -10,6 +11,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+@Slf4j
 public class BencodeApi {
     private final BencodeDecoder decoder;
     private final BencodeEncoder encoder;
@@ -28,6 +30,7 @@ public class BencodeApi {
     }
 
     public Bencode decodeFile(String path) throws IOException {
+        log.info("Decoding bencode data of {}", path);
         File file = new File(path);
         if (!file.exists()) {
             throw new IOException("Unable to find file: " + path);

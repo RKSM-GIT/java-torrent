@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
 import org.mehul.torrentclient.bencode.encoder.BencodeEncoder;
 import org.mehul.torrentclient.bencode.exception.BencodeException;
 import org.mehul.torrentclient.bencode.model.Bencode;
@@ -24,6 +25,7 @@ import java.util.Map;
 @AllArgsConstructor
 @NoArgsConstructor
 @ToString
+@Slf4j
 // Torrent File
 public class MetaInfoFile {
     private static final String ANNOUNCE_KEY = "announce";
@@ -34,6 +36,7 @@ public class MetaInfoFile {
     private byte[] infoHash;
 
     public static MetaInfoFile fromBencode(Bencode bencode) throws BencodeException {
+        log.info("Converting Bencode to MetaInfo file");
         if (bencode.getType() != Bencode.BencodeType.DICTIONARY) {
             throw new BencodeException("Only dictionary type bencode can be transformed into TorrentFile");
         }
@@ -80,6 +83,7 @@ public class MetaInfoFile {
     }
 
     public TrackerInfo getTrackers(byte[] peerId) throws BencodeException {
+        log.info("Getting tracker info");
         HttpUtil httpUtil = HttpUtil.getInstance();
         List<TrackerInfo> res = new ArrayList<>();
 

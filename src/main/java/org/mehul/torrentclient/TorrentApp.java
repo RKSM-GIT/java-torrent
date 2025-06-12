@@ -1,66 +1,86 @@
 package org.mehul.torrentclient;
 
+import lombok.extern.slf4j.Slf4j;
 import org.mehul.torrentclient.bencode.api.BencodeApi;
 import org.mehul.torrentclient.bencode.exception.BencodeException;
 import org.mehul.torrentclient.bencode.model.Bencode;
 import org.mehul.torrentclient.handshake.HandshakeMessageUtil;
 import org.mehul.torrentclient.handshake.TcpPeerConnection;
+import org.mehul.torrentclient.peer.Peer;
+import org.mehul.torrentclient.peer.PeerDownloader;
 import org.mehul.torrentclient.torrent.MetaInfoFile;
 import org.mehul.torrentclient.torrent.SingleFileTorrentInfo;
 import org.mehul.torrentclient.tracker.TrackerInfo;
-import org.mehul.torrentclient.util.ByteUtil;
 import org.mehul.torrentclient.util.PeerUtil;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.List;
 
+@Slf4j
 public class TorrentApp {
     public static void main(String[] args) throws IOException, BencodeException {
         BencodeApi bencodeApi = new BencodeApi();
 
         // Parse torrent file
         String filePath = "sample.torrent";
-        System.out.println("Parsing Torrent File - " + filePath);
         Bencode decoded = bencodeApi.decodeFile(filePath);
         MetaInfoFile metaInfoFile = MetaInfoFile.fromBencode(decoded);
 
-        // Display torrent file
-        System.out.println("\nTorrent Info: ");
+        // Torrent File Information
         SingleFileTorrentInfo torrentInfo = (SingleFileTorrentInfo) metaInfoFile.getTorrentInfo();
         byte[] infoHash = metaInfoFile.getInfoHash();
 
-        System.out.println("Tracker URL: " + metaInfoFile.getAnnounce());
-        System.out.println("Length: " + torrentInfo.getLength());
-        System.out.println("Info Hash: " + ByteUtil.bytesToHexString(infoHash));
-        System.out.println("Piece Length: " + torrentInfo.getMaxPieceLength());
-
-        System.out.println("Piece Hashes: ");
-        torrentInfo.getPieceHashes().forEach(System.out::println);
-
-        // Display Tracker Information
-        System.out.println("\nTracker Information: ");
+        // My Peer ID & Tracker Info
         byte[] myPeerId = PeerUtil.generatePeerId();
-        System.out.println("My random Peer ID for Tracker Info: " + ByteUtil.bytesToHexString(myPeerId));
-
         TrackerInfo trackerInfo = metaInfoFile.getTrackers(myPeerId);
-        System.out.println("Tracker: {");
-        for (var peer : trackerInfo.getPeers()) {
-            System.out.println("\t" + peer);
-        }
-        System.out.println("}");
+        log.info("My Piece ID: {}", myPeerId);
 
-        // Do handshakes
-        System.out.println("\nDoing a handshake using my Peer ID: " + ByteUtil.bytesToHexString(myPeerId));
-        byte[] message = HandshakeMessageUtil.buildMessage(infoHash, myPeerId);
-        for (var peer : trackerInfo.getPeers()) {
-            try (TcpPeerConnection connection = new TcpPeerConnection(peer.getHostIp(), peer.getPort())) {
+        // Get First Peer
+        List<Peer> peers = trackerInfo.getPeers();
+        String ip = peers.getFirst().getHostIp();
+        int port = peers.getFirst().getPort();
+
+        // Download All Pieces
+        log.info("Downloading all pieces from first peer. Host: {}, Port: {}", ip, port);
+        try (
+                final var connection = new TcpPeerConnection(ip, port);
+                final var fileOutputStream = new FileOutputStream(new File("output.txt"));
+        ) {
+
+            for (int i = 0; i < torrentInfo.getPieceHashes().size(); ++i) {
+                log.info("Downloading piece index: {}", i);
+
+                // Do Handshake
+                log.info("Performing Handshake");
+                byte[] message = HandshakeMessageUtil.buildMessage(infoHash, myPeerId);
                 connection.sendMessage(message);
                 byte[] response = connection.receiveMessage(68);
-                byte[] peerId = HandshakeMessageUtil.extractPeerId(response);
 
-                System.out.println("Peer: " + peer + ", Peer ID: " + ByteUtil.bytesToHexString(peerId));
-            } catch (IOException e) {
-                System.out.println("Unable to get peer id for: " + peer);
+                PeerDownloader peerDownloader = new PeerDownloader(connection);
+
+                // BITSET -> INTERESTED -> UNCHOKE
+                peerDownloader.setupForDownload();
+                int pieceLen = torrentInfo.getPieceLength(i);
+
+                // Send Requests
+                peerDownloader.sendRequestsToDownloadPiece(i, pieceLen);
+
+                // Download Pieces in Chunks
+                byte[] downloadedPiece = peerDownloader.downloadingPieceAfterRequest(i, pieceLen);
+
+                // Verify downloaded data
+                boolean isValid = torrentInfo.verifyPiece(downloadedPiece, i);
+                log.info("Verification Result -> isValid: {}", isValid);
+
+                // Save to File
+                fileOutputStream.write(downloadedPiece);
             }
+        } catch (IOException e) {
+            log.error("IO-Error while downloading piece index 0: {}", e.getMessage());
+        } catch (RuntimeException e) {
+            log.error("Error while downloading piece index 0: {}", e.getMessage());
         }
     }
 }

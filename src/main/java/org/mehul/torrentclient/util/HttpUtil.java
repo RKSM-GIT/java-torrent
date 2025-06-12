@@ -1,5 +1,6 @@
 package org.mehul.torrentclient.util;
 
+import lombok.extern.slf4j.Slf4j;
 import org.mehul.torrentclient.bencode.decoder.BencodeDecoder;
 import org.mehul.torrentclient.bencode.exception.BencodeException;
 import org.mehul.torrentclient.bencode.model.Bencode;
@@ -15,6 +16,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.StringJoiner;
 
+@Slf4j
 public class HttpUtil {
 
     private HttpUtil() {
@@ -31,6 +33,7 @@ public class HttpUtil {
     }
 
     public Bencode getRequest(String uri, Map<String, String> params) throws BencodeException {
+        log.info("Sending Http request to {}, with params: {}", uri, params);
         URI fullUri = makeFullUrl(uri, params);
 
         HttpRequest httpRequest = HttpRequest.newBuilder().uri(fullUri).GET().build();
