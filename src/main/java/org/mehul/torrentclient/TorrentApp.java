@@ -11,6 +11,7 @@ import org.mehul.torrentclient.peer.PeerDownloader;
 import org.mehul.torrentclient.torrent.MetaInfoFile;
 import org.mehul.torrentclient.torrent.SingleFileTorrentInfo;
 import org.mehul.torrentclient.tracker.TrackerInfo;
+import org.mehul.torrentclient.util.ByteUtil;
 import org.mehul.torrentclient.util.PeerUtil;
 
 import java.io.File;
@@ -35,7 +36,7 @@ public class TorrentApp {
         // My Peer ID & Tracker Info
         byte[] myPeerId = PeerUtil.generatePeerId();
         TrackerInfo trackerInfo = metaInfoFile.getTrackers(myPeerId);
-        log.info("My Piece ID: {}", myPeerId);
+        log.info("My Piece ID: {}", ByteUtil.bytesToHexString(myPeerId));
 
         // Get First Peer
         List<Peer> peers = trackerInfo.getPeers();
@@ -44,12 +45,15 @@ public class TorrentApp {
 
         // Download All Pieces
         log.info("Downloading all pieces from first peer. Host: {}, Port: {}", ip, port);
-        try (
-                final var connection = new TcpPeerConnection(ip, port);
-                final var fileOutputStream = new FileOutputStream(new File("output.txt"));
-        ) {
+        for (int i = 0; i < torrentInfo.getPieceHashes().size(); ++i) {
+            try (
+                    final var connection = new TcpPeerConnection(ip, port);
+                    final var fileOutputStream = new FileOutputStream(new File("output.txt"));
+            ) {
 
-            for (int i = 0; i < torrentInfo.getPieceHashes().size(); ++i) {
+                PeerDownloader peerDownloader = new PeerDownloader(connection);
+
+
                 log.info("Downloading piece index: {}", i);
 
                 // Do Handshake
@@ -58,7 +62,6 @@ public class TorrentApp {
                 connection.sendMessage(message);
                 byte[] response = connection.receiveMessage(68);
 
-                PeerDownloader peerDownloader = new PeerDownloader(connection);
 
                 // BITSET -> INTERESTED -> UNCHOKE
                 peerDownloader.setupForDownload();
@@ -76,11 +79,12 @@ public class TorrentApp {
 
                 // Save to File
                 fileOutputStream.write(downloadedPiece);
+
+            } catch (IOException e) {
+                log.error("IO-Error while downloading piece index {}: {}", i, e.getMessage());
+            } catch (RuntimeException e) {
+                log.error("Error while downloading piece index {}: {}", i, e.getMessage());
             }
-        } catch (IOException e) {
-            log.error("IO-Error while downloading piece index 0: {}", e.getMessage());
-        } catch (RuntimeException e) {
-            log.error("Error while downloading piece index 0: {}", e.getMessage());
         }
     }
 }

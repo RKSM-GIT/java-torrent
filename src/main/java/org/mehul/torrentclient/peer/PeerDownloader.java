@@ -122,7 +122,7 @@ public class PeerDownloader {
 
             int begin = chunkBuffer.getInt();
             int block = chunkReceived.length - 2 * INTEGER_BYTE_SIZE;
-            log.info("Piece Index in response: {}, Start Index in response: {}, PayloadSize: {}"
+            log.info("Piece Index in response: {}, Start Index in response: {}, Payload Size: {}"
                     , resPieceIndex, begin, block);
 
             // Get payload
