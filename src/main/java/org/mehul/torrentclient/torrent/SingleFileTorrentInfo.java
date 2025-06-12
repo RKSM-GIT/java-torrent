@@ -26,7 +26,7 @@ public class SingleFileTorrentInfo extends TorrentInfo {
     private static final int PIECE_HASH_LENGTH = 20;
 
     private int length;
-    private List<byte[]> pieceHashes;
+    private List<String> pieceHashes;
 
     public static SingleFileTorrentInfo fromBencode(Bencode bencode) throws BencodeException {
         if (bencode.getType() != Bencode.BencodeType.DICTIONARY) {
@@ -38,7 +38,7 @@ public class SingleFileTorrentInfo extends TorrentInfo {
 
         singleFileTorrentInfo.setName(dict);
         singleFileTorrentInfo.setLength(dict);
-        singleFileTorrentInfo.setPieceLength(dict);
+        singleFileTorrentInfo.setMaxPieceLength(dict);
         singleFileTorrentInfo.setPieces(dict);
         singleFileTorrentInfo.torrentType = TorrentInfoType.SINGLE;
 
@@ -72,7 +72,7 @@ public class SingleFileTorrentInfo extends TorrentInfo {
         this.length = (int) length;
     }
 
-    public void setPieceLength(Map<String, Bencode> dict) throws BencodeException {
+    public void setMaxPieceLength(Map<String, Bencode> dict) throws BencodeException {
         if (!dict.containsKey(PIECE_LENGTH_KEY)) {
             throw new BencodeException("No " + PIECE_LENGTH_KEY + " key in TorrentInfo dictionary");
         }
@@ -83,7 +83,7 @@ public class SingleFileTorrentInfo extends TorrentInfo {
         }
 
         long pieceLength = ((BencodeNumber) pieceLengthBencode).getValue();
-        this.pieceLength = (int) pieceLength;
+        this.maxPieceLength = (int) pieceLength;
     }
 
     public void setPieces(Map<String, Bencode> dict) throws BencodeException {
@@ -97,7 +97,24 @@ public class SingleFileTorrentInfo extends TorrentInfo {
         }
 
         byte[] concatenatedPieces = ((BencodeString) piecesBencode).getValue();
-        this.pieceHashes = ByteUtil.splitBytesByLength(concatenatedPieces, PIECE_HASH_LENGTH);
+
+        this.pieceHashes = ByteUtil
+                .splitBytesByLength(concatenatedPieces, PIECE_HASH_LENGTH)
+                .stream()
+                .map(ByteUtil::bytesToHexString)
+                .toList();
     }
 
+    public int getPieceLength(int pieceId) throws IllegalArgumentException {
+        int n = pieceHashes.size();
+        if (pieceId > n) {
+            throw new IllegalArgumentException("Piece Id can be up to " + (n - 1));
+        }
+
+        if (pieceId == n - 1) {
+            return length - ((n - 1) * maxPieceLength);
+        }
+
+        return maxPieceLength;
+    }
 }

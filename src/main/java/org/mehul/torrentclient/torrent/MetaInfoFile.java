@@ -91,7 +91,7 @@ public class MetaInfoFile {
         params.put("port", "6881");
         params.put("uploaded", "0");
         params.put("downloaded", "0");
-        params.put("left", Integer.toString(torrentInfo.getPieceLength()));
+        params.put("left", Integer.toString(torrentInfo.getMaxPieceLength()));
         params.put("compact", "1");
         String uri = announce;
 

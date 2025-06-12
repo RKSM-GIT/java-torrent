@@ -9,6 +9,7 @@ import org.mehul.torrentclient.bencode.model.Bencode;
 import org.mehul.torrentclient.bencode.model.BencodeDictionary;
 import org.mehul.torrentclient.bencode.model.BencodeNumber;
 import org.mehul.torrentclient.bencode.model.BencodeString;
+import org.mehul.torrentclient.peer.Peer;
 
 import java.util.List;
 import java.util.Map;

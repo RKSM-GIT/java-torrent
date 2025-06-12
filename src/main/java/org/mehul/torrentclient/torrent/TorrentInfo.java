@@ -5,7 +5,7 @@ import lombok.Getter;
 @Getter
 public abstract class TorrentInfo {
     protected String name;
-    protected int pieceLength;
+    protected int maxPieceLength;
     protected TorrentInfoType torrentType;
 
 }

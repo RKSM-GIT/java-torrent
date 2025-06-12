@@ -7,6 +7,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
+import java.nio.ByteBuffer;
 
 public class TcpPeerConnection implements AutoCloseable {
     private static final int TIMEOUT = 10_000; // 10 seconds
@@ -55,6 +56,19 @@ public class TcpPeerConnection implements AutoCloseable {
         }
 
         return buffer;
+    }
+
+    // [ 4-byte length ][ 1-byte message ID ][ payload of (length-1) bytes ]
+    public byte[] receivePeerMessage() throws IOException {
+        byte[] lengthBytes = receiveMessage(4);
+        int length = ByteBuffer.wrap(lengthBytes).getInt();
+
+        if (length == 0) {
+            // if length is 0, then this is a keep alive message
+            return new byte[0];
+        }
+
+        return receiveMessage(length);
     }
 
     @Override

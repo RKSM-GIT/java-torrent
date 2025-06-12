@@ -31,10 +31,10 @@ public class TorrentApp {
         System.out.println("Tracker URL: " + metaInfoFile.getAnnounce());
         System.out.println("Length: " + torrentInfo.getLength());
         System.out.println("Info Hash: " + ByteUtil.bytesToHexString(infoHash));
-        System.out.println("Piece Length: " + torrentInfo.getPieceLength());
+        System.out.println("Piece Length: " + torrentInfo.getMaxPieceLength());
 
         System.out.println("Piece Hashes: ");
-        torrentInfo.getPieceHashes().forEach((el) -> System.out.println(ByteUtil.bytesToHexString(el)));
+        torrentInfo.getPieceHashes().forEach(System.out::println);
 
         // Display Tracker Information
         System.out.println("\nTracker Information: ");
