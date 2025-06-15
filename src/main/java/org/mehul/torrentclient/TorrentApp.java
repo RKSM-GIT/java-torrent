@@ -1,6 +1,9 @@
 package org.mehul.torrentclient;
 
-import lombok.extern.slf4j.Slf4j;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.util.List;
+
 import org.mehul.torrentclient.bencode.api.BencodeApi;
 import org.mehul.torrentclient.bencode.exception.BencodeException;
 import org.mehul.torrentclient.bencode.model.Bencode;
@@ -14,17 +17,21 @@ import org.mehul.torrentclient.tracker.TrackerInfo;
 import org.mehul.torrentclient.util.ByteUtil;
 import org.mehul.torrentclient.util.PeerUtil;
 
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.util.List;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class TorrentApp {
     public static void main(String[] args) throws IOException, BencodeException {
+        if (args.length < 1) {
+            log.error("Please provide the path to the torrent file as a command line argument");
+            System.exit(1);
+        }
+
         BencodeApi bencodeApi = new BencodeApi();
 
         // Parse torrent file
-        String filePath = "sample.torrent";
+        String filePath = args[0];
+        log.info("Using torrent file: {}", filePath);
         Bencode decoded = bencodeApi.decodeFile(filePath);
         MetaInfoFile metaInfoFile = MetaInfoFile.fromBencode(decoded);
 
