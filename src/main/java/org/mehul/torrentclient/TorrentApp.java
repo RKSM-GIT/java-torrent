@@ -14,7 +14,6 @@ import org.mehul.torrentclient.tracker.TrackerInfo;
 import org.mehul.torrentclient.util.ByteUtil;
 import org.mehul.torrentclient.util.PeerUtil;
 
-import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.List;
@@ -48,19 +47,18 @@ public class TorrentApp {
         for (int i = 0; i < torrentInfo.getPieceHashes().size(); ++i) {
             try (
                     final var connection = new TcpPeerConnection(ip, port);
-                    final var fileOutputStream = new FileOutputStream(new File("output.txt"));
+                    final var fileOutputStream = new FileOutputStream("output.txt")
             ) {
+                log.info("Downloading piece index: {}", i);
 
                 PeerDownloader peerDownloader = new PeerDownloader(connection);
-
-
-                log.info("Downloading piece index: {}", i);
 
                 // Do Handshake
                 log.info("Performing Handshake");
                 byte[] message = HandshakeMessageUtil.buildMessage(infoHash, myPeerId);
                 connection.sendMessage(message);
                 byte[] response = connection.receiveMessage(68);
+                log.info("Handshake Response: {}", ByteUtil.bytesToHexString(response));
 
 
                 // BITSET -> INTERESTED -> UNCHOKE

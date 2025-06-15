@@ -1,13 +1,17 @@
 package org.mehul.torrentclient.bencode.decoder;
 
-import org.mehul.torrentclient.bencode.exception.BencodeException;
-import org.mehul.torrentclient.bencode.model.*;
-import org.mehul.torrentclient.util.ByteIterator;
-
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+
+import org.mehul.torrentclient.bencode.exception.BencodeException;
+import org.mehul.torrentclient.bencode.model.Bencode;
+import org.mehul.torrentclient.bencode.model.BencodeDictionary;
+import org.mehul.torrentclient.bencode.model.BencodeList;
+import org.mehul.torrentclient.bencode.model.BencodeNumber;
+import org.mehul.torrentclient.bencode.model.BencodeString;
+import org.mehul.torrentclient.util.ByteIterator;
 
 public class BencodeDecoder {
 
@@ -68,7 +72,7 @@ public class BencodeDecoder {
         }
 
         try {
-            return new BencodeNumber(Long.parseLong(sb.toString()));
+            return new BencodeNumber(Long.parseLong(sb, 0, sb.length(), 10));
         } catch (NumberFormatException ex) {
             throw new BencodeException("Malformed number at position " + start, ex);
         }
@@ -103,8 +107,6 @@ public class BencodeDecoder {
             if (!it.hasNext()) {
                 throw new BencodeException("Unexpected end of input in string value at position " + it.getIndex());
             }
-            byte x = it.peek();
-            char c = (char) x;
             strBytes[i] = it.next();
         }
 
@@ -134,7 +136,6 @@ public class BencodeDecoder {
     private BencodeDictionary decodeDictionary(ByteIterator it) {
         it.next(); // skip 'd'
         Map<String, Bencode> map = new LinkedHashMap<>();
-        List<String> keys = new ArrayList<>();
 
         while (true) {
             if (!it.hasNext()) {
@@ -148,7 +149,6 @@ public class BencodeDecoder {
 
             BencodeString keyObj = decodeString(it);
             String key = keyObj.asString();
-            keys.add(key);
 
             Bencode value = decodeNext(it);
             map.put(key, value);

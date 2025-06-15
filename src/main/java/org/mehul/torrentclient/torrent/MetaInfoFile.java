@@ -1,10 +1,10 @@
 package org.mehul.torrentclient.torrent;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.ToString;
-import lombok.extern.slf4j.Slf4j;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.HashMap;
+import java.util.Map;
+
 import org.mehul.torrentclient.bencode.encoder.BencodeEncoder;
 import org.mehul.torrentclient.bencode.exception.BencodeException;
 import org.mehul.torrentclient.bencode.model.Bencode;
@@ -14,12 +14,11 @@ import org.mehul.torrentclient.tracker.TrackerInfo;
 import org.mehul.torrentclient.util.ByteUtil;
 import org.mehul.torrentclient.util.HttpUtil;
 
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
 
 @Getter
 @AllArgsConstructor
@@ -85,8 +84,6 @@ public class MetaInfoFile {
     public TrackerInfo getTrackers(byte[] peerId) throws BencodeException {
         log.info("Getting tracker info");
         HttpUtil httpUtil = HttpUtil.getInstance();
-        List<TrackerInfo> res = new ArrayList<>();
-
 
         Map<String, String> params = new HashMap<>();
 
