@@ -7,8 +7,7 @@ import junit.framework.TestSuite;
 /**
  * Unit test for simple App.
  */
-public class TorrentAppTest
-        extends TestCase {
+public class TorrentAppTest extends TestCase {
     /**
      * Create the test case
      *
@@ -26,7 +25,7 @@ public class TorrentAppTest
     }
 
     /**
-     * Rigourous Test :-)
+     * Rigorous Test :-)
      */
     public void testApp() {
         assertTrue(true);
